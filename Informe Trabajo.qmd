@@ -1,0 +1,172 @@
+---
+title: "Evaluación del precio de las computadoras mediante regresión lineal multiple"
+author: Manuela Vargas Madrid, Silvana Rojas Osorio
+lang: es
+theme: sketchy
+format: 
+  html:
+    toc: true
+    toc-location: left
+    number-sections: true
+editor: visual
+echo: FALSE
+---
+
+# Resumen
+
+En este informe se puede observar el análisis de regresión lineal múltiple realizado para entender la variación del precio de los computadores portátiles, teniendo en cuenta las componentes del computador, entre las componentes tenemos la marca, el procesador, la memoria RAM, el almacenamiento, el tamaño de la pantalla, la tarjeta gráfica, el sistema operativo, la duración de la batería, el peso y la garantía. Mediante este estudio se pretende analizar cuales son las variables que afectan más el precio del computador o si por el contrario no lo afecta.
+
+# Introducción
+
+Para entender el comportamiento de las variables se pretende hacer el análisis con base a las preguntas planteadas a continuación.
+
+## Pregunta principal
+
+¿El precio de los computadores es justificable gracias a las singularidades de sus componentes y todas las variables del modelo?
+
+### Preguntas auxiliares
+
+¿Podría considerarse que la variable Tarjeta Gráfica hace que el precio de los computadores cambie?
+
+¿Qué tan adecuado es el modelo de regresión lineal múltiple en términos de ajuste (R²) y significancia estadística (valores p de las variables), y cómo podría mejorar la precisión del modelo en caso de encontrar resultados subóptimos?
+
+# Objetivos
+
+## Obetivo general
+
+Evaluar el impacto de las diferentes características de los computadores portátiles en el precio de este, identificando cuales componentes tiene mayor influencia en el costo.
+
+## Objetivos especifico
+
+Desarrollar un modelo de regresión lineal múltiple que permita ver el precio de los portátiles en función a la combinación de sus características identificando la mejor combinación.
+
+Analizar la relación entre las posibles combinaciones de hardware, como la RAM o tarjeta gráfica y su impacto en el precio de los computadores portátiles.
+
+# Datos
+
+Se hace la clasificación de las variables para poder aplicar los métodos de análisis necesarios dependiendo de si es cuantitativa o cualitativa.
+
+| Variable         | Tipo de la variable |
+|------------------|---------------------|
+| Brand            | Cualitativa         |
+| Model            | Cualitativa         |
+| Processor        | Cualitativa         |
+| RAM.             | Cuantitativa        |
+| Storage          | Cuantitativa        |
+| Screen Size      | Cualitativa         |
+| Graphics Card    | Cualitativa         |
+| Operating System | Cualitativa         |
+| Weight           | Cuantitativa        |
+| Battery Life     | Cuantitativa        |
+| Price            | Cuantitativa        |
+| Warranty         | Cuantitativa        |
+
+# Análisis gráficos
+
+```{r datos}
+library(readr)
+datos <- read_csv("C:\\Users\\manuv\\Desktop\\Universidad\\Diseno de experimentos analisis de regresion\\Trabajo regresion multiple\\laptop Price Prediction Dataset.csv", show_col_types = FALSE)
+```
+
+Es posible observar en la figura 1 que la marca no afecta significativamente el precio del computador puesto que los cuantiles y la media se encuentran muy parejos, esto significa que en promedio el precio no varía de acuerdo con esta variable.
+
+```{r}
+#| label: fig-pricebrand
+#| fig-cap: "Análisis exploratorio entre la relación del precio y el procesador"
+boxplot(formula=Price ~ Brand, data=datos)
+```
+
+Mediante el boxplot realizado en la figura 2, se logra analizar que la variable correspondiente al procesador del computador si afecta el precio del dispositivo más no es un impacto muy significativo o relevante puesto que se encuentra en un intervalo no muy amplio.
+
+```{r}
+#| label: fig-priceprocessor
+#| fig-cap: "Análisis exploratorio entre la relación del precio y el procesador"
+boxplot(formula =Price  ~ Processor, data = datos)
+```
+
+En la figura 3, gracias al boxplot podemos ver que la variación del precio de los computadores con diferentes tarjetas graficas no tiene un cambio muy significativo, en promedio el precio es de 1500 y 2000. También se puede observar que no tiene valores atípicos.
+
+```{r}
+#| label: fig-pricegraphicscard
+#| fig-cap: "Análisis exploratorio entre la relacion del precio y la tarjeta grafica"
+boxplot(formula = Price ~ `Graphics Card`, data = datos)
+```
+
+En este boxplot se compara los precios de los portátiles según el sistema operativo con el que se maneje, nuevamente encontramos que los precios no varían mucho entre ellos, estando así mismo en promedio entre 1500 y 2000, lo que nos indica que el sistema operativo no influye en el precio del aparato.
+
+```{r}
+#| label: fig-priceoperatingsystem
+#| fig-cap: "Análisis exploratorio entre la relación del precio y el sistema operativo"
+boxplot(formula=Price ~ `Operating System`, data=datos)
+```
+
+En la figura 5, se analiza si el tamaño de la pantalla tiene algún efecto en los precios de los portátiles, sin embargo, volvemos a observar el patrón de las gráficas anteriores, el precio en promedio esta entre 1500 y 2000, por lo que aunque la pantalla sea más grande no afectar en nada el precio de los computadores.
+
+```{r}
+#| label: fig-pricescreensizeinches
+#| fig-cap: "Análisis exploratorio entre la relación del precio y el tamaño de la pantalla"
+boxplot(formula=Price ~ `Screen Size`, data=datos)
+```
+
+Para hacer el análisis de las variables cuantitativas se utilizaron gráficos de dispersión como se observa en la figura 6, sin embargo, la gráfica no se puede leer con claridad debido a la cantidad de datos, igual se puede decir que no hay mucha varianza de datos ya que no están muy separados unos de otros. Y para estar seguros de los resultados de estas variables respecto al precio se aplicaron pruebas numéricas.
+
+```{r}
+#| label: fig-price-cuantitativas
+#| fig-cap: "Análisis exploratorio entre la relación del precio y la bateria y el peso"
+var_cuanti <- datos[, c("Weight", "Battery Life", "Price")]
+pairs(var_cuanti)
+```
+
+# Análisis de resultados númericos
+
+El modelo 1 (m1), fue el elegido para el previo análisis de las variables seleccionadas, por lo que se pasó al summary y fue posible analizar su R² y luego el vif, los cuales están relacionados. Los datos obtenidos en el vif fueron casi 1, sin embargo son un poco mayores, por lo que su R² es casi 0, esto quiere decir que la varianza de una de las variables está inflada debido a la relación que hay entre las msimas variables; también es posible ver que no existen problemas de multicolinealidad ya que aunque el Vif es > 1, tampoco es mucha la ventaja que hay.
+
+```{r}
+var_cuanti <- datos[, c("Weight", "Battery Life", "Price")]
+m1 <- lm(Price ~ ., data = var_cuanti)
+summary(m1)
+```
+
+Resultados de la prueba vif
+
+```{r}
+#| message: false
+#| warning: false
+library(car)
+vif(m1)
+```
+
+El summary del anova arroja en la suma de cuadrados datos muy grandes, esto significa que las variables aportan significativamente a explicar la varianza en la variable de respuesta.
+
+```{r}
+anova <- aov(Price ~ ., data = datos)
+summary(anova)
+```
+
+Gracias a la prueba bptest se encontró que los elementos del modelo 1, primeramente son normales, pero además de ello dice que, no hay pruebas suficientes para decir que son heterocedásticos, no se puede decir que la varianza cambia con el nivel de las variables independientes.
+
+```{r}
+#| message: false
+#| warning: false
+library(lmtest)
+bptest(m1)
+```
+
+Con la prueba Breusch-Godfrey (bgtest) se confirma lo que anteriormente se dijo y es que los datos siguen una distribución nromal, pero además, su alto valor p indica que no existe una autocorrelación.
+
+```{r}
+bgtest(m1)
+```
+
+# Conclusiones
+Gracias al análisis exploratorio de regresión múltple se pudo encontrar la respuesta a la primera pregunta planteada, la cual consistía en la varianza del precio debido a la memoria gráfica, lo cual es falso, ya que gracias a la figura 3, el boxplot de la memoria gráfica, su posible analizar que esta memoria no afecta en gran manera el precio del dispositivo.
+
+El uso de Rstudio para el análisis de modelos de regresión múltiple es verdaderamente útil y efectivo, sin embargo, hay que tener previos conocimientos para hacer un uso eficiente 
+Es posible que existan otros factores relevantes que no se incluyeron en el modelo y que pueden influir más fuertemente en el precio de los computadores como la antigüedad del modelo
+
+Los resultados indican que las variables analizadas no explican de forma adecuada el precio de los computadores. Esto puede reflejarse en un bajo valor de R^2 demasiado cercano a 0, que sugiere que una porción significativa de la variación en el precio no está siendo explicada por las variables incluidas en el modelo. Significa que el modelo no explica mucha variabilidad de la variable de respuesta y que los valores predichos son esencialmente el promedio de los valores observados.
+
+
+# Referencias
+
+Datos obtenidos en: https://www.kaggle.com/datasets/zafarali27/laptop-price-prediction?select=laptop+Price+Prediction+Dataset.csv
